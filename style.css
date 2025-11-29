@@ -45,17 +45,35 @@ body {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
+    box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.5);
     position: absolute;
     transition: top 0.1s linear;
 }
 
-.puyo.red { background-color: #ff4444; }
-.puyo.green { background-color: #44ff44; }
-.puyo.blue { background-color: #4444ff; }
-.puyo.yellow { background-color: #ffff44; }
-.puyo.purple { background-color: #aa44ff; }
-.puyo.garbage { background-color: #aaaaaa; border-radius: 5px; }
+.puyo.red {
+    background-color: #ff4444;
+}
+
+.puyo.green {
+    background-color: #44ff44;
+}
+
+.puyo.blue {
+    background-color: #4444ff;
+}
+
+.puyo.yellow {
+    background-color: #ffff44;
+}
+
+.puyo.purple {
+    background-color: #aa44ff;
+}
+
+.puyo.garbage {
+    background-color: #aaaaaa;
+    border-radius: 5px;
+}
 
 .status-panel {
     width: 100%;
@@ -68,8 +86,27 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 150px;
+    justify-content: flex-start;
+    width: 200px;
+    padding-top: 20px;
+}
+
+.next-display-area {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.player-next-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.player-next-group span {
+    font-size: 0.8em;
+    margin-bottom: 5px;
+    color: #aaa;
 }
 
 #turn-indicator {
@@ -79,16 +116,47 @@ body {
     color: #ffcc00;
 }
 
+.next-queue {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
 .next-puyo {
     width: 60px;
     height: 60px;
     background-color: #444;
-    margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(1, 30px);
     grid-template-rows: repeat(2, 30px);
     justify-content: center;
     align-content: center;
+    border: 2px solid #666;
+}
+
+.next-puyo .puyo {
+    position: static;
+    box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.next-next-puyo {
+    width: 40px;
+    height: 40px;
+    background-color: #333;
+    display: grid;
+    grid-template-columns: repeat(1, 20px);
+    grid-template-rows: repeat(2, 20px);
+    justify-content: center;
+    align-content: center;
+    border: 1px solid #555;
+}
+
+.next-next-puyo .puyo {
+    width: 20px;
+    height: 20px;
+    position: static;
+    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .nuisance-tray {

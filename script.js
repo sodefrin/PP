@@ -79,7 +79,10 @@ class Game {
         this.p2Board = new Board('p2');
         this.turn = 'p1'; // 'p1' or 'p2'
         this.movesLeft = 3;
-        this.nextColors = this.generateColors();
+
+        // Independent queues
+        this.p1Queue = [this.generateColors(), this.generateColors()];
+        this.p2Queue = [this.generateColors(), this.generateColors()];
 
         this.updateUI();
         this.updateNextPuyoUI();
@@ -97,47 +100,49 @@ class Game {
 
     startTurn() {
         const board = this.turn === 'p1' ? this.p1Board : this.p2Board;
-        if (!board.spawnPuyo(this.nextColors)) {
+        const queue = this.turn === 'p1' ? this.p1Queue : this.p2Queue;
+
+        const currentColors = queue.shift();
+        queue.push(this.generateColors());
+
+        if (!board.spawnPuyo(currentColors)) {
             alert(`${this.turn === 'p1' ? 'Player 2' : 'Player 1'} Wins!`);
             return;
         }
-        this.nextColors = this.generateColors();
         this.updateNextPuyoUI();
     }
 
     updateNextPuyoUI() {
-        const currentNextId = this.turn === 'p1' ? 'p1-next' : 'p2-next';
-        // Actually, next puyo is for the NEXT turn? Or current turn's next?
-        // Usually "Next" shows what comes AFTER the current piece.
-        // In my logic:
-        // 1. startTurn uses `this.nextColors` to spawn.
-        // 2. Then generates NEW `this.nextColors`.
-        // So `this.nextColors` IS the next piece for the NEXT turn (or next move).
+        this.renderQueue(this.p1Queue, 'p1');
+        this.renderQueue(this.p2Queue, 'p2');
+    }
 
-        // We should show it for the CURRENT player?
-        // Or does each player have their own queue?
-        // In this PoC, `this.nextColors` is shared or generated per turn?
-        // `generateColors` is called in `startTurn`.
-        // If it's shared hotseat, maybe just one "Next" display?
-        // But HTML has `#p1-next` and `#p2-next`.
-        // Let's show `this.nextColors` in the active player's "Next" box.
-        // And maybe clear the other one?
+    renderQueue(queue, playerId) {
+        const nextEl = document.getElementById(`${playerId}-next`);
+        const nextNextEl = document.getElementById(`${playerId}-next-next`);
 
-        const p1Next = document.getElementById('p1-next');
-        const p2Next = document.getElementById('p2-next');
+        nextEl.innerHTML = '';
+        nextNextEl.innerHTML = '';
 
-        p1Next.innerHTML = '';
-        p2Next.innerHTML = '';
+        const [nextColors, nextNextColors] = queue;
 
-        const container = this.turn === 'p1' ? p1Next : p2Next;
+        // Render Next
+        // colors[0] is Main (Bottom), colors[1] is Sub (Top)
+        // We want Top puyo in Row 1, Bottom puyo in Row 2
+        const p1_sub = document.createElement('div');
+        p1_sub.className = `puyo ${nextColors[1]}`;
+        nextEl.appendChild(p1_sub);
+        const p1_main = document.createElement('div');
+        p1_main.className = `puyo ${nextColors[0]}`;
+        nextEl.appendChild(p1_main);
 
-        const p1 = document.createElement('div');
-        p1.className = `puyo ${this.nextColors[0]}`;
-        container.appendChild(p1);
-
-        const p2 = document.createElement('div');
-        p2.className = `puyo ${this.nextColors[1]}`;
-        container.appendChild(p2);
+        // Render Next-Next
+        const nn1_sub = document.createElement('div');
+        nn1_sub.className = `puyo ${nextNextColors[1]}`;
+        nextNextEl.appendChild(nn1_sub);
+        const nn1_main = document.createElement('div');
+        nn1_main.className = `puyo ${nextNextColors[0]}`;
+        nextNextEl.appendChild(nn1_main);
     }
 
     updateUI() {
