@@ -109,7 +109,6 @@ class Game {
         queue.push(this.generateColors());
 
         if (!board.spawnPuyo(currentColors)) {
-            alert(`${this.turn === 'p1' ? 'Player 2' : 'Player 1'} Wins!`);
             return;
         }
         this.updateNextPuyoUI();
@@ -378,10 +377,33 @@ class Game {
             }
 
             this.handleNuisance(board);
+
+            if (this.checkGameOver()) {
+                return;
+            }
+
             this.switchTurn();
         } else {
             this.startTurn();
         }
+    }
+
+    checkGameOver() {
+        // Check if either player has lost
+        // Condition: Spawn point (0, 2) is blocked
+        // We check both boards because garbage might have fallen? 
+        // Actually, usually only the active player could have died from their own move or garbage falling on them.
+        // But checking both is safe.
+
+        if (this.p1Board.grid[0][2] || this.p1Board.grid[1][2]) {
+            alert('Player 2 Wins!');
+            return true;
+        }
+        if (this.p2Board.grid[0][2] || this.p2Board.grid[1][2]) {
+            alert('Player 1 Wins!');
+            return true;
+        }
+        return false;
     }
 
     calculateScore(matches, chainCount) {
