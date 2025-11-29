@@ -78,7 +78,9 @@ class Game {
         this.p1Board = new Board('p1');
         this.p2Board = new Board('p2');
         this.turn = 'p1'; // 'p1' or 'p2'
-        this.movesLeft = 4;
+        this.movesLeft = 3;
+        this.maxMoves = 3;
+        this.nextTurnBonusMoves = 0;
 
         // Independent queues
         this.p1Queue = [this.generateColors(), this.generateColors()];
@@ -148,8 +150,8 @@ class Game {
     updateUI() {
         document.getElementById('turn-indicator').innerText = `Turn: ${this.turn === 'p1' ? 'Player 1' : 'Player 2'}`;
         // Show moves remaining
-        document.getElementById('p1-moves').innerText = this.turn === 'p1' ? this.movesLeft : '-';
-        document.getElementById('p2-moves').innerText = this.turn === 'p2' ? this.movesLeft : '-';
+        document.getElementById('p1-moves').innerText = this.turn === 'p1' ? `${this.movesLeft}/${this.maxMoves}` : '-';
+        document.getElementById('p2-moves').innerText = this.turn === 'p2' ? `${this.movesLeft}/${this.maxMoves}` : '-';
 
         this.updateNuisanceUI(this.p1Board, 'p1-nuisance');
         this.updateNuisanceUI(this.p2Board, 'p2-nuisance');
@@ -162,14 +164,6 @@ class Game {
         let amount = board.pendingNuisance;
 
         // Standard Puyo Nuisance Symbols
-        // Comet: 1440 (Not implementing for PoC, max is Crown)
-        // Crown: 720
-        // Moon: 360
-        // Star: 180
-        // Rock: 30
-        // Big: 6
-        // Small: 1
-
         const symbols = [
             { value: 720, className: 'nuisance-crown' },
             { value: 360, className: 'nuisance-moon' },
@@ -278,7 +272,7 @@ class Game {
         const board = this.turn === 'p1' ? this.p1Board : this.p2Board;
         const group = board.activePuyoGroup;
 
-        // Hard drop or soft drop? "3 moves or fire". 
+        // Hard drop or soft drop? "3 moves or fire".
         // Usually "Down" moves one step. "Up" or separate button for hard drop.
         // Let's make Down move one step, if blocked, lock.
 
@@ -361,6 +355,13 @@ class Game {
         this.updateUI();
 
         if (chainCount > 0 || this.movesLeft <= 0) {
+            // Calculate bonus moves for next player if chain occurred
+            if (chainCount > 0) {
+                this.nextTurnBonusMoves = chainCount * 3;
+            } else {
+                this.nextTurnBonusMoves = 0;
+            }
+
             this.handleNuisance(board);
             this.switchTurn();
         } else {
@@ -371,9 +372,9 @@ class Game {
     calculateScore(matches, chainCount) {
         // Group matches by color and connectivity to determine bonuses
         // matches is a flat list of puyos. We need to reconstruct groups to calculate Group Bonus and Color Bonus.
-        // Actually findMatches returns a flat list. 
+        // Actually findMatches returns a flat list.
         // We should probably let findMatches return groups or re-group here.
-        // For simplicity, let's re-group or modify findMatches. 
+        // For simplicity, let's re-group or modify findMatches.
         // But findMatches logic in this file returns a flat array of all matched puyos.
         // We can deduce colors easily.
 
@@ -420,7 +421,7 @@ class Game {
         // Helper to group puyos by connectivity
         // Since they are already matched, we just need to group them by color and adjacency?
         // Actually, findMatches logic already grouped them but flattened.
-        // Let's just group by color for now as an approximation, 
+        // Let's just group by color for now as an approximation,
         // assuming matches of same color are one group (which is true 99% of time in simple chains).
         // BUT, separate groups of same color can exist (e.g. 4 red here, 4 red there).
         // For strict rules, we need adjacency.
@@ -573,11 +574,10 @@ class Game {
         }
 
         // Drop nuisance if any remains on active player?
-        // Rules: Nuisance falls on the player whose turn just ENDED? 
+        // Rules: Nuisance falls on the player whose turn just ENDED?
         // No, nuisance falls on the player who is ABOUT TO START or AFTER they finish?
         // User said: "(1) p1 moves... nuisance calc -> p2 turn. (2) p2 moves... nuisance calc -> offset -> p1 turn".
-        // Usually nuisance falls at the START of your turn, or after you fail to offset.
-        // Standard Puyo: Garbage falls after you finish your chain, if you didn't offset everything.
+        // Usually nuisance falls at the START of your turn, or after you finish your chain, if you didn't offset everything.
         // So if P1 finishes, and has pending garbage, it falls NOW.
 
         if (activeBoard.pendingNuisance > 0) {
@@ -617,7 +617,9 @@ class Game {
 
     switchTurn() {
         this.turn = this.turn === 'p1' ? 'p2' : 'p1';
-        this.movesLeft = 4;
+        this.movesLeft = 3 + this.nextTurnBonusMoves;
+        this.maxMoves = this.movesLeft;
+        this.nextTurnBonusMoves = 0; // Reset for next turn
         this.updateUI();
         this.startTurn();
     }
