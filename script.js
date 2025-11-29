@@ -380,9 +380,8 @@ class Game {
 
         if (chainCount > 0 || turnEnd) {
             // Calculate bonus moves for next player
-            // Formula: Max(3, RemainingMoves + ChainCount * 3)
             // Note: movesLeft has already been decremented for the current move
-            let nextMovesBonus = chainCount * 3;
+            let nextMovesBonus = chainCount * 2;
             if (this.turn === 'p1') {
                 this.p2MovesLeft += nextMovesBonus;
             } else {
