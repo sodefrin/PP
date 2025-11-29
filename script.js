@@ -150,8 +150,8 @@ class Game {
     updateUI() {
         document.getElementById('turn-indicator').innerText = `Turn: ${this.turn === 'p1' ? 'Player 1' : 'Player 2'}`;
         // Show moves remaining
-        const p1Moves = this.turn === 'p1' ? `${this.movesLeft}/${this.maxMoves}` : `${this.nextTurnMoves || 3}/${this.nextTurnMoves || 3}`;
-        const p2Moves = this.turn === 'p2' ? `${this.movesLeft}/${this.maxMoves}` : `${this.nextTurnMoves || 3}/${this.nextTurnMoves || 3}`;
+        const p1Moves = this.turn === 'p1' ? this.movesLeft : (this.nextTurnMoves || 3);
+        const p2Moves = this.turn === 'p2' ? this.movesLeft : (this.nextTurnMoves || 3);
 
         document.getElementById('p1-moves').innerText = p1Moves;
         document.getElementById('p2-moves').innerText = p2Moves;
