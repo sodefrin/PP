@@ -1,6 +1,8 @@
 const ROWS = 12;
 const COLS = 6;
 const COLORS = ['red', 'green', 'blue', 'yellow'];
+const TURN_MOVES = 2;
+const CHAIN_MOVES = 2;
 
 class Puyo {
     constructor(color, r, c) {
@@ -93,7 +95,7 @@ class Game {
         this.turn = 'p1'; // 'p1' or 'p2'
 
         // Moves left for each player
-        this.p1MovesLeft = 3;
+        this.p1MovesLeft = TURN_MOVES;
         this.p2MovesLeft = 0;
 
         // Independent queues
@@ -424,7 +426,7 @@ class Game {
         this.p1Board.reset();
         this.p2Board.reset();
         this.turn = 'p1';
-        this.p1MovesLeft = 3;
+        this.p1MovesLeft = TURN_MOVES;
         this.p2MovesLeft = 0;
         this.p1Queue = [this.generateColors(), this.generateColors()];
         this.p2Queue = [this.generateColors(), this.generateColors()];
@@ -682,9 +684,9 @@ class Game {
     switchTurn() {
         this.turn = this.turn === 'p1' ? 'p2' : 'p1';
         if (this.turn === 'p1') {
-            this.p1MovesLeft += 3;
+            this.p1MovesLeft += TURN_MOVES;
         } else {
-            this.p2MovesLeft += 3;
+            this.p2MovesLeft += TURN_MOVES;
         }
         this.updateUI();
         this.startTurn();
