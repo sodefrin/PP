@@ -298,43 +298,39 @@ class Game {
         let somethingChanged = true;
 
         while (somethingChanged) {
-            // 1. Apply gravity (drop floating puyos)
+            // 1. Apply gravity
             const dropped = await this.applyGravity(board);
 
             // 2. Find matches
             const matches = this.findMatches(board);
 
             if (matches.length > 0) {
-                // 3. Remove matches
-                await this.removeMatches(board, matches);
                 chainCount++;
-                somethingChanged = true;
 
-                // Calculate score/garbage (simplified)
-                const points = matches.length * 10 * chainCount; // Basic scoring
-                board.score += points;
+                // 3. Calculate Score (Official Rule)
+                const scoreData = this.calculateScore(matches, chainCount);
+                board.score += scoreData.score;
 
-                // Add nuisance to opponent (simplified: 1 nuisance per 4 puyos cleared)
-                // In real Puyo, it's based on score.
-                // Let's stick to the user's request: "Player 1 moves 3 times OR fires -> nuisance calc"
-                // Actually, nuisance is calculated per chain but sent at end of turn?
-                // Or sent immediately? User said "Player 1 moves 3 times or fires... nuisance calc... switch".
-                // So we accumulate nuisance during the chain.
+                // 4. Calculate Nuisance
+                // Standard rate: 70 points = 1 nuisance
+                const nuisanceRate = 70;
+                let nuisancePoints = scoreData.score + (board.nuisanceRemainder || 0);
+                const nuisanceGenerated = Math.floor(nuisancePoints / nuisanceRate);
+                board.nuisanceRemainder = nuisancePoints % nuisanceRate;
 
-                // For PoC, let's just track score for now, and calculate nuisance at end of turn.
-                // Or maybe calculate nuisance here and store in a buffer.
-                const nuisanceGenerated = Math.floor(points / 100); // Dummy formula
                 board.nuisance += nuisanceGenerated;
+
+                // 5. Remove matches
+                await this.removeMatches(board, matches);
+                somethingChanged = true;
 
                 this.updateUI();
             } else {
-                somethingChanged = dropped; // If only dropped but no matches, we might need to check matches again? 
-                // Actually, if dropped, we loop again to check matches.
-                // If nothing dropped and no matches, we are stable.
+                somethingChanged = dropped;
             }
 
             if (somethingChanged) {
-                await new Promise(r => setTimeout(r, 300)); // Animation delay
+                await new Promise(r => setTimeout(r, 300));
             }
         }
 
@@ -342,14 +338,97 @@ class Game {
         this.movesLeft--;
         this.updateUI();
 
-        // Switch turn if chain occurred OR moves ran out
         if (chainCount > 0 || this.movesLeft <= 0) {
-            // Handle nuisance transfer before switching
             this.handleNuisance(board);
             this.switchTurn();
         } else {
             this.startTurn();
         }
+    }
+
+    calculateScore(matches, chainCount) {
+        // Group matches by color and connectivity to determine bonuses
+        // matches is a flat list of puyos. We need to reconstruct groups to calculate Group Bonus and Color Bonus.
+        // Actually findMatches returns a flat list. 
+        // We should probably let findMatches return groups or re-group here.
+        // For simplicity, let's re-group or modify findMatches. 
+        // But findMatches logic in this file returns a flat array of all matched puyos.
+        // We can deduce colors easily.
+
+        const uniqueColors = new Set(matches.map(p => p.color));
+        const colorCount = uniqueColors.size;
+        const puyoCount = matches.length;
+
+        // Group Bonus is per group. We need to know the size of each connected group.
+        // Since we don't have that info readily from flat list, let's approximate or re-calculate.
+        // Re-calculating groups from the matches list:
+        // We can just run a quick connected component search on the matches list?
+        // Or better, modify findMatches to return groups.
+        // Let's modify findMatches in a separate edit if needed, but for now let's assume we can get it.
+        // Actually, let's just implement a helper here to group the matches.
+
+        const groups = this.groupMatches(matches);
+
+        // Constants (Puyo Puyo Tsu)
+        const CHAIN_BONUS = [0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512]; // 1-indexed (index 0 is chain 1)
+        const COLOR_BONUS = [0, 0, 3, 6, 12, 24]; // 1, 2, 3, 4, 5 colors
+        const GROUP_BONUS = [0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 10]; // 0-3, 4, 5, 6... 11+ is 10
+
+        // Calculate Bonuses
+        let cp = CHAIN_BONUS[Math.min(chainCount, CHAIN_BONUS.length) - 1] || 0;
+
+        let cb = COLOR_BONUS[Math.min(colorCount, COLOR_BONUS.length) - 1] || 0;
+
+        let gb = 0;
+        for (const group of groups) {
+            const size = group.length;
+            if (size >= 11) gb += 10;
+            else if (size >= 4) gb += GROUP_BONUS[size] || 0;
+        }
+
+        let totalBonus = cp + cb + gb;
+        if (totalBonus === 0) totalBonus = 1; // Min 1
+        if (totalBonus > 999) totalBonus = 999; // Max 999
+
+        const score = (10 * puyoCount) * totalBonus;
+        return { score };
+    }
+
+    groupMatches(matches) {
+        // Helper to group puyos by connectivity
+        // Since they are already matched, we just need to group them by color and adjacency?
+        // Actually, findMatches logic already grouped them but flattened.
+        // Let's just group by color for now as an approximation, 
+        // assuming matches of same color are one group (which is true 99% of time in simple chains).
+        // BUT, separate groups of same color can exist (e.g. 4 red here, 4 red there).
+        // For strict rules, we need adjacency.
+
+        const groups = [];
+        const visited = new Set();
+
+        for (const p of matches) {
+            if (visited.has(p)) continue;
+
+            const group = [p];
+            visited.add(p);
+            const stack = [p];
+
+            while (stack.length > 0) {
+                const curr = stack.pop();
+                // Check neighbors in matches list
+                for (const other of matches) {
+                    if (!visited.has(other) && other.color === curr.color) {
+                        if (Math.abs(other.r - curr.r) + Math.abs(other.c - curr.c) === 1) {
+                            visited.add(other);
+                            group.push(other);
+                            stack.push(other);
+                        }
+                    }
+                }
+            }
+            groups.push(group);
+        }
+        return groups;
     }
 
     async applyGravity(board) {
