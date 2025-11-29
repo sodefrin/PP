@@ -1,0 +1,108 @@
+body {
+    background-color: #222;
+    color: #fff;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#game-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.player-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #333;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(6, 30px);
+    grid-template-rows: repeat(12, 30px);
+    background-color: #000;
+    border: 2px solid #555;
+    margin: 10px 0;
+    position: relative;
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box;
+    border: 1px solid #222;
+}
+
+.puyo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
+    position: absolute;
+    transition: top 0.1s linear;
+}
+
+.puyo.red { background-color: #ff4444; }
+.puyo.green { background-color: #44ff44; }
+.puyo.blue { background-color: #4444ff; }
+.puyo.yellow { background-color: #ffff44; }
+.puyo.purple { background-color: #aa44ff; }
+.puyo.garbage { background-color: #aaaaaa; border-radius: 5px; }
+
+.status-panel {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+#info-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+}
+
+#turn-indicator {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #ffcc00;
+}
+
+.next-puyo {
+    width: 60px;
+    height: 60px;
+    background-color: #444;
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(1, 30px);
+    grid-template-rows: repeat(2, 30px);
+    justify-content: center;
+    align-content: center;
+}
+
+.nuisance-tray {
+    width: 100%;
+    height: 20px;
+    background-color: #222;
+    margin-top: 5px;
+    display: flex;
+    gap: 2px;
+}
+
+.nuisance-marker {
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    border-radius: 50%;
+}
