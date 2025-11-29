@@ -78,8 +78,10 @@ class Game {
         this.p1Board = new Board('p1');
         this.p2Board = new Board('p2');
         this.turn = 'p1'; // 'p1' or 'p2'
-        this.movesLeft = 3;
-        this.nextTurnBonusMoves = 0;
+
+        // Moves left for each player
+        this.p1MovesLeft = 3;
+        this.p2MovesLeft = 0;
 
         // Independent queues
         this.p1Queue = [this.generateColors(), this.generateColors()];
@@ -148,12 +150,9 @@ class Game {
 
     updateUI() {
         document.getElementById('turn-indicator').innerText = `Turn: ${this.turn === 'p1' ? 'Player 1' : 'Player 2'}`;
-        // Show moves remaining
-        const p1Moves = this.turn === 'p1' ? this.movesLeft : (this.nextTurnMoves || 3);
-        const p2Moves = this.turn === 'p2' ? this.movesLeft : (this.nextTurnMoves || 3);
 
-        document.getElementById('p1-moves').innerText = p1Moves;
-        document.getElementById('p2-moves').innerText = p2Moves;
+        document.getElementById('p1-moves').innerText = this.p1MovesLeft;
+        document.getElementById('p2-moves').innerText = this.p2MovesLeft;
 
         this.updateNuisanceUI(this.p1Board, 'p1-nuisance');
         this.updateNuisanceUI(this.p2Board, 'p2-nuisance');
@@ -352,18 +351,31 @@ class Game {
             }
         }
 
+        let turnEnd = false;
         // Turn end logic
-        this.movesLeft--;
+        if (this.turn === 'p1') {
+            this.p1MovesLeft--;
+            if (this.p1MovesLeft === 0) {
+                turnEnd = true;
+            }
+        } else {
+            this.p2MovesLeft--;
+            if (this.p2MovesLeft === 0) {
+                turnEnd = true;
+            }
+        }
         this.updateUI();
 
-        if (chainCount > 0 || this.movesLeft <= 0) {
+        if (chainCount > 0 || turnEnd) {
             // Calculate bonus moves for next player
             // Formula: Max(3, RemainingMoves + ChainCount * 3)
             // Note: movesLeft has already been decremented for the current move
-            let nextMoves = this.movesLeft + (chainCount * 3);
-            if (nextMoves < 3) nextMoves = 3;
-
-            this.nextTurnMoves = nextMoves;
+            let nextMovesBonus = chainCount * 3;
+            if (this.turn === 'p1') {
+                this.p2MovesLeft += nextMovesBonus;
+            } else {
+                this.p1MovesLeft += nextMovesBonus;
+            }
 
             this.handleNuisance(board);
             this.switchTurn();
@@ -620,8 +632,11 @@ class Game {
 
     switchTurn() {
         this.turn = this.turn === 'p1' ? 'p2' : 'p1';
-        this.movesLeft = this.nextTurnMoves || 3;
-        this.nextTurnMoves = 0; // Reset
+        if (this.turn === 'p1') {
+            this.p1MovesLeft += 3;
+        } else {
+            this.p2MovesLeft += 3;
+        }
         this.updateUI();
         this.startTurn();
     }
