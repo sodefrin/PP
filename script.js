@@ -150,8 +150,11 @@ class Game {
     updateUI() {
         document.getElementById('turn-indicator').innerText = `Turn: ${this.turn === 'p1' ? 'Player 1' : 'Player 2'}`;
         // Show moves remaining
-        document.getElementById('p1-moves').innerText = this.turn === 'p1' ? `${this.movesLeft}/${this.maxMoves}` : '-';
-        document.getElementById('p2-moves').innerText = this.turn === 'p2' ? `${this.movesLeft}/${this.maxMoves}` : '-';
+        const p1Moves = this.turn === 'p1' ? `${this.movesLeft}/${this.maxMoves}` : `${this.nextTurnMoves || 3}/${this.nextTurnMoves || 3}`;
+        const p2Moves = this.turn === 'p2' ? `${this.movesLeft}/${this.maxMoves}` : `${this.nextTurnMoves || 3}/${this.nextTurnMoves || 3}`;
+
+        document.getElementById('p1-moves').innerText = p1Moves;
+        document.getElementById('p2-moves').innerText = p2Moves;
 
         this.updateNuisanceUI(this.p1Board, 'p1-nuisance');
         this.updateNuisanceUI(this.p2Board, 'p2-nuisance');
