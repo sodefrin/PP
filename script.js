@@ -355,12 +355,13 @@ class Game {
         this.updateUI();
 
         if (chainCount > 0 || this.movesLeft <= 0) {
-            // Calculate bonus moves for next player if chain occurred
-            if (chainCount > 0) {
-                this.nextTurnBonusMoves = chainCount * 3;
-            } else {
-                this.nextTurnBonusMoves = 0;
-            }
+            // Calculate bonus moves for next player
+            // Formula: Max(3, RemainingMoves + ChainCount * 3)
+            // Note: movesLeft has already been decremented for the current move
+            let nextMoves = this.movesLeft + (chainCount * 3);
+            if (nextMoves < 3) nextMoves = 3;
+
+            this.nextTurnMoves = nextMoves;
 
             this.handleNuisance(board);
             this.switchTurn();
@@ -617,9 +618,9 @@ class Game {
 
     switchTurn() {
         this.turn = this.turn === 'p1' ? 'p2' : 'p1';
-        this.movesLeft = 3 + this.nextTurnBonusMoves;
+        this.movesLeft = this.nextTurnMoves || 3;
         this.maxMoves = this.movesLeft;
-        this.nextTurnBonusMoves = 0; // Reset for next turn
+        this.nextTurnMoves = 0; // Reset
         this.updateUI();
         this.startTurn();
     }
