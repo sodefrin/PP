@@ -78,7 +78,7 @@ class Game {
         this.p1Board = new Board('p1');
         this.p2Board = new Board('p2');
         this.turn = 'p1'; // 'p1' or 'p2'
-        this.movesLeft = 3;
+        this.movesLeft = 4;
 
         // Independent queues
         this.p1Queue = [this.generateColors(), this.generateColors()];
@@ -147,9 +147,7 @@ class Game {
 
     updateUI() {
         document.getElementById('turn-indicator').innerText = `Turn: ${this.turn === 'p1' ? 'Player 1' : 'Player 2'}`;
-        document.getElementById('p1-moves').innerText = this.turn === 'p1' ? 3 - this.movesLeft : 0; // Wait, logic is "moves done" or "moves left"? User said "3 moves".
-        // Let's show moves remaining or moves used. User said "3 moves operation".
-        // Let's show moves remaining.
+        // Show moves remaining
         document.getElementById('p1-moves').innerText = this.turn === 'p1' ? this.movesLeft : '-';
         document.getElementById('p2-moves').innerText = this.turn === 'p2' ? this.movesLeft : '-';
 
@@ -160,13 +158,37 @@ class Game {
     updateNuisanceUI(board, elementId) {
         const container = document.getElementById(elementId);
         container.innerHTML = '';
-        // 1 marker per 1 nuisance (simplified)
-        // Max 30 markers to avoid overflow
-        const count = Math.min(board.pendingNuisance, 30);
-        for (let i = 0; i < count; i++) {
-            const marker = document.createElement('div');
-            marker.className = 'nuisance-marker';
-            container.appendChild(marker);
+
+        let amount = board.pendingNuisance;
+
+        // Standard Puyo Nuisance Symbols
+        // Comet: 1440 (Not implementing for PoC, max is Crown)
+        // Crown: 720
+        // Moon: 360
+        // Star: 180
+        // Rock: 30
+        // Big: 6
+        // Small: 1
+
+        const symbols = [
+            { value: 720, className: 'nuisance-crown' },
+            { value: 360, className: 'nuisance-moon' },
+            { value: 180, className: 'nuisance-star' },
+            { value: 30, className: 'nuisance-rock' },
+            { value: 6, className: 'nuisance-big' },
+            { value: 1, className: 'nuisance-small' }
+        ];
+
+        for (const sym of symbols) {
+            while (amount >= sym.value) {
+                const marker = document.createElement('div');
+                marker.className = `nuisance-marker ${sym.className}`;
+                container.appendChild(marker);
+                amount -= sym.value;
+
+                // Limit max markers to avoid overflow UI
+                if (container.children.length > 10) return;
+            }
         }
     }
 
@@ -595,7 +617,7 @@ class Game {
 
     switchTurn() {
         this.turn = this.turn === 'p1' ? 'p2' : 'p1';
-        this.movesLeft = 3;
+        this.movesLeft = 4;
         this.updateUI();
         this.startTurn();
     }
