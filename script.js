@@ -70,12 +70,12 @@ class Board {
         // Spawn at top center (0, 2) and (1, 2) usually, but let's say (0, 2) is pivot
         // Simplified: Pivot at (0, 2), other at (-1, 2) initially then drops?
         // Let's spawn at (0, 2) and (1, 2) for simplicity if empty
-        if (this.grid[0][2] || this.grid[1][2]) {
+        if (this.grid[0][2]) {
             return false; // Game Over
         }
 
-        const p1 = new Puyo(colors[0], 1, 2); // Main
-        const p2 = new Puyo(colors[1], 0, 2); // Sub (above)
+        const p1 = new Puyo(colors[0], -1, 2); // Main
+        const p2 = new Puyo(colors[1], -2, 2); // Sub (above)
 
         this.activePuyoGroup = {
             puyos: [p1, p2],
@@ -83,6 +83,10 @@ class Board {
         };
         this.render();
         return true;
+    }
+
+    isValidPosition(r, c) {
+        return c >= 0 && c < COLS && r < ROWS && (r < 0 || !this.grid[r][c]);
     }
 }
 
@@ -231,7 +235,8 @@ class Game {
         let canMove = true;
         for (const p of group.puyos) {
             const newC = p.c + dir;
-            if (newC < 0 || newC >= COLS || board.grid[p.r][newC]) {
+            // Allow moving if row is negative (above grid)
+            if (newC < 0 || newC >= COLS || (p.r >= 0 && board.grid[p.r][newC])) {
                 canMove = false;
                 break;
             }
@@ -244,8 +249,6 @@ class Game {
     }
 
     rotate(dir) {
-        // Simple rotation logic placeholder
-        // Need to implement rotation system (around pivot)
         const board = this.turn === 'p1' ? this.p1Board : this.p2Board;
         const group = board.activePuyoGroup;
         const main = group.puyos[0];
@@ -268,16 +271,37 @@ class Game {
             newDc = dr;
         }
 
-        const newR = main.r + newDr;
-        const newC = main.c + newDc;
+        // Wall Kicks / Floor Kicks
+        // Try offsets: [0,0], [0,1], [0,-1], [1,0], [-1,0]
+        const kicks = [
+            [0, 0],   // Standard
+            [0, 1],   // Kick Right (if blocked on left)
+            [0, -1],  // Kick Left (if blocked on right)
+            [1, 0],   // Kick Down (if blocked above? rare)
+            [-1, 0]   // Kick Up (Floor kick)
+        ];
 
-        // Check bounds/collision
-        if (newC >= 0 && newC < COLS && newR >= 0 && newR < ROWS && !board.grid[newR][newC]) {
-            sub.r = newR;
-            sub.c = newC;
-            board.render();
-        } else {
-            // Wall kick? For PoC maybe just block
+        for (const [kr, kc] of kicks) {
+            const testMainR = main.r + kr;
+            const testMainC = main.c + kc;
+            const testSubR = testMainR + newDr;
+            const testSubC = testMainC + newDc;
+
+            if (board.isValidPosition(testMainR, testMainC) &&
+                board.isValidPosition(testSubR, testSubC)) {
+
+                // Apply rotation + kick
+                main.r = testMainR;
+                main.c = testMainC;
+                sub.r = testSubR;
+                sub.c = testSubC;
+
+                // Update rotation state (optional, for tracking)
+                // group.rotation = ...
+
+                board.render();
+                return;
+            }
         }
     }
 
@@ -292,7 +316,8 @@ class Game {
         let canDrop = true;
         for (const p of group.puyos) {
             const newR = p.r + 1;
-            if (newR >= ROWS || board.grid[newR][p.c]) {
+            // If newR is negative, it's definitely empty (above grid)
+            if (newR >= ROWS || (newR >= 0 && board.grid[newR][p.c])) {
                 canDrop = false;
                 break;
             }
@@ -407,12 +432,12 @@ class Game {
         // Actually, usually only the active player could have died from their own move or garbage falling on them.
         // But checking both is safe.
 
-        if (this.p1Board.grid[0][2] || this.p1Board.grid[1][2]) {
+        if (this.p1Board.grid[0][2]) {
             alert('Player 2 Wins!');
             this.reset();
             return true;
         }
-        if (this.p2Board.grid[0][2] || this.p2Board.grid[1][2]) {
+        if (this.p2Board.grid[0][2]) {
             alert('Player 1 Wins!');
             this.reset();
             return true;
