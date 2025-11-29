@@ -23,6 +23,19 @@ class Board {
         this.isAnimating = false;
     }
 
+    reset() {
+        this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+        this.activePuyoGroup = null;
+        this.score = 0;
+        this.nuisance = 0;
+        this.pendingNuisance = 0;
+        this.isAnimating = false;
+        this.render();
+        // Clear nuisance UI
+        const nuisanceContainer = document.getElementById(`${this.playerId}-nuisance`);
+        if (nuisanceContainer) nuisanceContainer.innerHTML = '';
+    }
+
     render() {
         this.element.innerHTML = '';
         // Render static grid
@@ -397,13 +410,28 @@ class Game {
 
         if (this.p1Board.grid[0][2] || this.p1Board.grid[1][2]) {
             alert('Player 2 Wins!');
+            this.reset();
             return true;
         }
         if (this.p2Board.grid[0][2] || this.p2Board.grid[1][2]) {
             alert('Player 1 Wins!');
+            this.reset();
             return true;
         }
         return false;
+    }
+
+    reset() {
+        this.p1Board.reset();
+        this.p2Board.reset();
+        this.turn = 'p1';
+        this.p1MovesLeft = 3;
+        this.p2MovesLeft = 0;
+        this.p1Queue = [this.generateColors(), this.generateColors()];
+        this.p2Queue = [this.generateColors(), this.generateColors()];
+        this.updateUI();
+        this.updateNextPuyoUI();
+        this.startTurn();
     }
 
     calculateScore(matches, chainCount) {
