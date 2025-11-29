@@ -22,7 +22,6 @@ class Board {
         this.score = 0;
         this.nuisance = 0; // Generated this turn
         this.pendingNuisance = 0; // Incoming from opponent
-        this.isAnimating = false;
     }
 
     reset() {
@@ -31,7 +30,6 @@ class Board {
         this.score = 0;
         this.nuisance = 0;
         this.pendingNuisance = 0;
-        this.isAnimating = false;
         this.render();
         // Clear nuisance UI
         const nuisanceContainer = document.getElementById(`${this.playerId}-nuisance`);
@@ -203,7 +201,7 @@ class Game {
 
     handleInput(e) {
         const board = this.turn === 'p1' ? this.p1Board : this.p2Board;
-        if (!board.activePuyoGroup || board.isAnimating) return;
+        if (!board.activePuyoGroup) return;
 
         // Shared controls for PoC
         switch (e.key) {
