@@ -79,7 +79,6 @@ class Game {
         this.p2Board = new Board('p2');
         this.turn = 'p1'; // 'p1' or 'p2'
         this.movesLeft = 3;
-        this.maxMoves = 3;
         this.nextTurnBonusMoves = 0;
 
         // Independent queues
@@ -622,7 +621,6 @@ class Game {
     switchTurn() {
         this.turn = this.turn === 'p1' ? 'p2' : 'p1';
         this.movesLeft = this.nextTurnMoves || 3;
-        this.maxMoves = this.movesLeft;
         this.nextTurnMoves = 0; // Reset
         this.updateUI();
         this.startTurn();
