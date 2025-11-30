@@ -14,11 +14,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, ok := r.Context().Value(lib.UserContextKey).(db.User)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	user := r.Context().Value(lib.UserContextKey).(db.User)
 
 	// Don't return password hash
 	resp := struct {

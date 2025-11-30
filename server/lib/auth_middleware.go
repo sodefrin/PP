@@ -54,3 +54,14 @@ func AuthMiddleware(queries *db.Queries) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+func RequireAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, ok := r.Context().Value(UserContextKey).(db.User)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}

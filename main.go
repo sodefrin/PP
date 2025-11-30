@@ -79,7 +79,7 @@ func main() {
 	mux.HandleFunc("/ws", api.WsHandler)
 	mux.HandleFunc("/api/signup", api.SignupHandler)
 	mux.HandleFunc("/api/signin", api.SigninHandler)
-	mux.HandleFunc("/api/me", api.MeHandler)
+	mux.HandleFunc("/api/me", lib.RequireAuthMiddleware(api.MeHandler))
 
 	// Wrap with Auth Middleware
 	handler := lib.AuthMiddleware(api.Queries)(mux)

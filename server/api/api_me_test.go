@@ -46,18 +46,6 @@ func TestMeHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("Unauthorized_NoUser", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
-		// No user in context
-
-		w := httptest.NewRecorder()
-		MeHandler(w, req)
-
-		if w.Code != http.StatusUnauthorized {
-			t.Errorf("expected status 401, got %d", w.Code)
-		}
-	})
-
 	t.Run("MethodNotAllowed", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/me", nil)
 		w := httptest.NewRecorder()
@@ -65,6 +53,47 @@ func TestMeHandler(t *testing.T) {
 
 		if w.Code != http.StatusMethodNotAllowed {
 			t.Errorf("expected status 405, got %d", w.Code)
+		}
+	})
+}
+
+func TestRequireAuthMiddleware(t *testing.T) {
+	t.Run("Unauthorized", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		w := httptest.NewRecorder()
+
+		// Dummy handler that should not be called
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			t.Error("next handler should not be called")
+		})
+
+		lib.RequireAuthMiddleware(next)(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("expected status 401, got %d", w.Code)
+		}
+	})
+
+	t.Run("Authorized", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		user := db.User{ID: 1, Name: "test"}
+		ctx := context.WithValue(req.Context(), lib.UserContextKey, user)
+		req = req.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		called := false
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			called = true
+			w.WriteHeader(http.StatusOK)
+		})
+
+		lib.RequireAuthMiddleware(next)(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+		if !called {
+			t.Error("next handler should have been called")
 		}
 	})
 }
