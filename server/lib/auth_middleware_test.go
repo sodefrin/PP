@@ -20,7 +20,9 @@ func TestRequireAuthMiddleware(t *testing.T) {
 			return nil
 		})
 
-		RequireAuthMiddleware(next)(w, req)
+		if err := RequireAuthMiddleware(next)(w, req); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
 
 		if w.Code != http.StatusUnauthorized {
 			t.Errorf("expected status 401, got %d", w.Code)
@@ -41,7 +43,9 @@ func TestRequireAuthMiddleware(t *testing.T) {
 			return nil
 		})
 
-		RequireAuthMiddleware(next)(w, req)
+		if err := RequireAuthMiddleware(next)(w, req); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
 
 		if w.Code != http.StatusOK {
 			t.Errorf("expected status 200, got %d", w.Code)
