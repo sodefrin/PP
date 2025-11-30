@@ -64,6 +64,8 @@ func SigninHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionID,
 		Expires:  expiresAt,
 		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 	})
 
