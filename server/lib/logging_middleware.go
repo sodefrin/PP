@@ -35,13 +35,19 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		span := trace.SpanFromContext(r.Context())
 		traceID := span.SpanContext().TraceID().String()
 
-		slog.Info("HTTP Request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"remote_addr", r.RemoteAddr,
-			"status", rw.statusCode,
-			"duration", duration,
-			"trace_id", traceID,
-		)
+		attrs := []any{
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.String("remote_addr", r.RemoteAddr),
+			slog.Int("status", rw.statusCode),
+			slog.Duration("duration", duration),
+			slog.String("trace_id", traceID),
+		}
+
+		if rw.statusCode >= 500 {
+			slog.Error("HTTP Request Failed", attrs...)
+		} else {
+			slog.Info("HTTP Request", attrs...)
+		}
 	})
 }
