@@ -50,9 +50,6 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
-
 	// Create session
 	sessionID := uuid.New().String()
 	expiresAt := time.Now().Add(24 * time.Hour)
@@ -78,4 +75,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			Path:     "/",
 		})
 	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
 }

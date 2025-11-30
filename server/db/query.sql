@@ -7,6 +7,10 @@ RETURNING *;
 SELECT * FROM users
 WHERE name = ? LIMIT 1;
 
+-- name: GetUser :one
+SELECT * FROM users
+WHERE id = ? LIMIT 1;
+
 -- name: CreateSession :one
 INSERT INTO sessions (
   id, user_id, expires_at

@@ -33,6 +33,22 @@ func TestSignin(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
 	}
+
+	// Verify session cookie
+	cookies := w.Result().Cookies()
+	found := false
+	for _, c := range cookies {
+		if c.Name == "session_id" {
+			found = true
+			if c.Value == "" {
+				t.Error("Session cookie value is empty")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("Session cookie not found")
+	}
 }
 
 func TestSigninInvalid(t *testing.T) {

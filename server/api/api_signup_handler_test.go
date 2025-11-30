@@ -31,6 +31,22 @@ func TestSignup(t *testing.T) {
 	if resp["Name"] != "testuser1" {
 		t.Errorf("Expected name testuser1, got %v", resp["Name"])
 	}
+
+	// Verify session cookie
+	cookies := w.Result().Cookies()
+	found := false
+	for _, c := range cookies {
+		if c.Name == "session_id" {
+			found = true
+			if c.Value == "" {
+				t.Error("Session cookie value is empty")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("Session cookie not found")
+	}
 }
 
 func TestSignupDuplicate(t *testing.T) {
@@ -41,7 +57,7 @@ func TestSignupDuplicate(t *testing.T) {
 		"password": "password123",
 	}
 	body, _ := json.Marshal(reqBody)
-	
+
 	// First creation
 	req1 := httptest.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(body))
 	w1 := httptest.NewRecorder()
