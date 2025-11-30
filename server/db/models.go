@@ -12,3 +12,10 @@ type GameStat struct {
 	ID        int64
 	CreatedAt sql.NullTime
 }
+
+type User struct {
+	ID           int64
+	Name         string
+	PasswordHash string
+	CreatedAt    sql.NullTime
+}

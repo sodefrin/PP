@@ -1,7 +1,7 @@
 package api
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -16,32 +16,27 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
-}
-
 func WsHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Upgrade error:", err)
+		slog.Error("Upgrade error", "error", err)
 		return
 	}
 	defer conn.Close()
 
-	log.Println("Client connected")
+	slog.Info("Client connected")
 
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Read error:", err)
+			slog.Error("Read error", "error", err)
 			return
 		}
-		log.Printf("Received: %s", p)
+		slog.Info("Received message", "payload", string(p))
 
 		// Echo message back
 		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println("Write error:", err)
+			slog.Error("Write error", "error", err)
 			return
 		}
 	}

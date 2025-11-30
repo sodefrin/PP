@@ -22,6 +22,29 @@ func (q *Queries) CreateGameStat(ctx context.Context) (GameStat, error) {
 	return i, err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (name, password_hash)
+VALUES (?, ?)
+RETURNING id, name, password_hash, created_at
+`
+
+type CreateUserParams struct {
+	Name         string
+	PasswordHash string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser, arg.Name, arg.PasswordHash)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PasswordHash,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getGameStats = `-- name: GetGameStats :many
 SELECT id, created_at FROM game_stats
 ORDER BY created_at DESC
@@ -48,4 +71,21 @@ func (q *Queries) GetGameStats(ctx context.Context) ([]GameStat, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getUserByName = `-- name: GetUserByName :one
+SELECT id, name, password_hash, created_at FROM users
+WHERE name = ? LIMIT 1
+`
+
+func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByName, name)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PasswordHash,
+		&i.CreatedAt,
+	)
+	return i, err
 }
