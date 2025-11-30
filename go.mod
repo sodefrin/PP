@@ -1,4 +1,4 @@
-module puyo-server
+module github.com/sodefrin/PP
 
 go 1.24.0
 

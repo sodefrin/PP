@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"puyo-server/server/api/dto"
+	"github.com/sodefrin/PP/server/api/dto"
 	"golang.org/x/crypto/bcrypt"
 )
 

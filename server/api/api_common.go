@@ -1,7 +1,7 @@
 package api
 
 import (
-	"puyo-server/server/db"
+	"github.com/sodefrin/PP/server/db"
 )
 
 var Queries *db.Queries

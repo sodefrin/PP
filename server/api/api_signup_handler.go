@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"puyo-server/server/api/dto"
-	"puyo-server/server/db"
+	"github.com/sodefrin/PP/server/api/dto"
+	"github.com/sodefrin/PP/server/db"
 
 	"golang.org/x/crypto/bcrypt"
 )

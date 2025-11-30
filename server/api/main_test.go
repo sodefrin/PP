@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"puyo-server/server/db"
+	"github.com/sodefrin/PP/server/db"
 
 	_ "modernc.org/sqlite"
 )
