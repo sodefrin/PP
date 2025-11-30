@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"io/fs"
@@ -8,8 +9,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/XSAM/otelsql"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+
 	"github.com/sodefrin/PP/server/api"
 	"github.com/sodefrin/PP/server/db"
+	"github.com/sodefrin/PP/server/lib"
 
 	_ "modernc.org/sqlite"
 )
@@ -25,10 +31,19 @@ var dbConn *sql.DB
 
 func initDB() {
 	var err error
-	dbConn, err = sql.Open("sqlite", "file::memory:?cache=shared")
+	// Use otelsql to open database with tracing
+	dbConn, err = otelsql.Open("sqlite", "file::memory:?cache=shared",
+		otelsql.WithAttributes(semconv.DBSystemSqlite),
+		otelsql.WithSQLCommenter(true),
+	)
 	if err != nil {
 		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)
+	}
+
+	// Register DB stats metrics (optional but good practice)
+	if err := otelsql.RegisterDBStatsMetrics(dbConn, otelsql.WithAttributes(semconv.DBSystemSqlite)); err != nil {
+		slog.Error("Failed to register DB stats metrics", "error", err)
 	}
 
 	// Execute schema
@@ -56,16 +71,34 @@ func main() {
 		slog.Error("Failed to get public FS", "error", err)
 		os.Exit(1)
 	}
-	http.Handle("/", http.FileServer(http.FS(publicFS)))
 
-	http.HandleFunc("/api/health", api.HealthHandler)
-	http.HandleFunc("/ws", api.WsHandler)
-	http.HandleFunc("/api/signup", api.SignupHandler)
-	http.HandleFunc("/api/signin", api.SigninHandler)
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.FS(publicFS)))
+
+	mux.HandleFunc("/api/health", api.HealthHandler)
+	mux.HandleFunc("/ws", api.WsHandler)
+	mux.HandleFunc("/api/signup", api.SignupHandler)
+	mux.HandleFunc("/api/signin", api.SigninHandler)
+
+	// Wrap mux with logging middleware
+	handler := lib.LoggingMiddleware(mux)
+
+	// Wrap with OpenTelemetry
+	handler = otelhttp.NewHandler(handler, "server")
+
+	// Init tracer
+	shutdown := lib.InitTracer()
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				slog.Error("Failed to shutdown tracer", "error", err)
+			}
+		}()
+	}
 
 	port := ":8080"
 	slog.Info("Server starting", "port", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(port, handler); err != nil {
 		slog.Error("ListenAndServe failed", "error", err)
 		os.Exit(1)
 	}
