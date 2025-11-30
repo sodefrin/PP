@@ -37,6 +37,8 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
-	dbConn.Close()
+	if err := dbConn.Close(); err != nil {
+		slog.Error("Failed to close database", "error", err)
+	}
 	os.Exit(code)
 }

@@ -63,7 +63,11 @@ func main() {
 	slog.SetDefault(logger)
 
 	initDB()
-	defer dbConn.Close()
+	defer func() {
+		if err := dbConn.Close(); err != nil {
+			slog.Error("Failed to close database", "error", err)
+		}
+	}()
 
 	// Serve static files from embedded filesystem
 	publicFS, err := fs.Sub(content, "public")

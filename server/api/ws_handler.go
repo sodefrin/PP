@@ -22,7 +22,11 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		slog.Error("Upgrade error", "error", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			slog.Error("Failed to close websocket connection", "error", err)
+		}
+	}()
 
 	slog.Info("Client connected")
 
