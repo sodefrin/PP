@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -13,14 +12,14 @@ import (
 
 func TestMeHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		user := db.User{
+		user := &db.User{
 			ID:   1,
 			Name: "testuser",
 		}
 
 		req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
 		// Inject user into context (simulating AuthMiddleware)
-		ctx := context.WithValue(req.Context(), lib.UserContextKey, user)
+		ctx := lib.SetUserContext(req.Context(), user)
 		req = req.WithContext(ctx)
 
 		w := httptest.NewRecorder()

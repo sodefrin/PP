@@ -12,7 +12,7 @@ import (
 
 type contextKey string
 
-const UserContextKey contextKey = "user"
+const userContextKey contextKey = "user"
 
 func AuthMiddleware(queries *db.Queries) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -49,7 +49,7 @@ func AuthMiddleware(queries *db.Queries) func(http.Handler) http.Handler {
 			}
 
 			// Add user to context
-			ctx := context.WithValue(r.Context(), UserContextKey, user)
+			ctx := context.WithValue(r.Context(), userContextKey, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -57,7 +57,7 @@ func AuthMiddleware(queries *db.Queries) func(http.Handler) http.Handler {
 
 func RequireAuthMiddleware(next HandlerFunc) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		_, ok := r.Context().Value(UserContextKey).(db.User)
+		_, ok := r.Context().Value(userContextKey).(db.User)
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return nil

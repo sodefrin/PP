@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/sodefrin/PP/server/api/dto"
-	"github.com/sodefrin/PP/server/db"
 	"github.com/sodefrin/PP/server/lib"
 )
 
@@ -16,7 +15,10 @@ func MeHandler() lib.HandlerFunc {
 			return nil
 		}
 
-		user := r.Context().Value(lib.UserContextKey).(db.User)
+		user, err := lib.GetUserContext(r.Context())
+		if err != nil {
+			return err
+		}
 
 		resp := dto.User{
 			ID:   user.ID,

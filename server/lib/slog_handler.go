@@ -35,7 +35,7 @@ func NewUserHandler(h slog.Handler) *UserHandler {
 }
 
 func (h *UserHandler) Handle(ctx context.Context, r slog.Record) error {
-	if user, ok := ctx.Value(UserContextKey).(db.User); ok {
+	if user, ok := ctx.Value(userContextKey).(db.User); ok {
 		r.AddAttrs(slog.Int64("user_id", user.ID))
 	}
 	return h.Handler.Handle(ctx, r)

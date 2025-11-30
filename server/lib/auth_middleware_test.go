@@ -32,7 +32,7 @@ func TestRequireAuthMiddleware(t *testing.T) {
 	t.Run("Authorized", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		user := db.User{ID: 1, Name: "test"}
-		ctx := context.WithValue(req.Context(), UserContextKey, user)
+		ctx := context.WithValue(req.Context(), userContextKey, user)
 		req = req.WithContext(ctx)
 		w := httptest.NewRecorder()
 
