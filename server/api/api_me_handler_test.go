@@ -24,7 +24,9 @@ func TestMeHandler(t *testing.T) {
 		req = req.WithContext(ctx)
 
 		w := httptest.NewRecorder()
-		MeHandler()(w, req)
+		if err := MeHandler()(w, req); err != nil {
+			t.Fatalf("MeHandler error: %v", err)
+		}
 
 		if w.Code != http.StatusOK {
 			t.Errorf("expected status 200, got %d", w.Code)
@@ -49,7 +51,9 @@ func TestMeHandler(t *testing.T) {
 	t.Run("MethodNotAllowed", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/me", nil)
 		w := httptest.NewRecorder()
-		MeHandler()(w, req)
+		if err := MeHandler()(w, req); err != nil {
+			t.Fatalf("MeHandler error: %v", err)
+		}
 
 		if w.Code != http.StatusMethodNotAllowed {
 			t.Errorf("expected status 405, got %d", w.Code)

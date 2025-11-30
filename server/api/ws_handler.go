@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/sodefrin/PP/server/lib"
 )
 
 var upgrader = websocket.Upgrader{
@@ -16,12 +17,11 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func WsHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func WsHandler() lib.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			slog.Error("Upgrade error", "error", err)
-			return
+			return err
 		}
 		defer func() {
 			if err := conn.Close(); err != nil {
@@ -34,15 +34,13 @@ func WsHandler() http.HandlerFunc {
 		for {
 			messageType, p, err := conn.ReadMessage()
 			if err != nil {
-				slog.Error("Read error", "error", err)
-				return
+				return err
 			}
 			slog.Info("Received message", "payload", string(p))
 
 			// Echo message back
 			if err := conn.WriteMessage(messageType, p); err != nil {
-				slog.Error("Write error", "error", err)
-				return
+				return err
 			}
 		}
 	}

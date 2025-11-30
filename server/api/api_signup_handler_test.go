@@ -17,7 +17,9 @@ func TestSignup(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
-	SignupHandler(testQueries)(w, req)
+	if err := SignupHandler(testQueries)(w, req); err != nil {
+		t.Fatalf("SignupHandler error: %v", err)
+	}
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("Expected status 201, got %d", w.Code)
@@ -61,7 +63,10 @@ func TestSignupDuplicate(t *testing.T) {
 	// First creation
 	req1 := httptest.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(body))
 	w1 := httptest.NewRecorder()
-	SignupHandler(testQueries)(w1, req1)
+	if err := SignupHandler(testQueries)(w1, req1); err != nil {
+		t.Fatalf("SignupHandler error: %v", err)
+	}
+
 	if w1.Code != http.StatusCreated {
 		t.Fatalf("Failed to create initial user: %d", w1.Code)
 	}
@@ -69,7 +74,9 @@ func TestSignupDuplicate(t *testing.T) {
 	// Second creation (duplicate)
 	req2 := httptest.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(body))
 	w2 := httptest.NewRecorder()
-	SignupHandler(testQueries)(w2, req2)
+	if err := SignupHandler(testQueries)(w2, req2); err != nil {
+		t.Fatalf("SignupHandler error: %v", err)
+	}
 
 	if w2.Code != http.StatusConflict {
 		t.Errorf("Expected status 409 for duplicate user, got %d", w2.Code)

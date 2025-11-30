@@ -2,18 +2,17 @@ package api
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/sodefrin/PP/server/db"
 	"github.com/sodefrin/PP/server/lib"
 )
 
-func MeHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func MeHandler() lib.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
+			return nil
 		}
 
 		user := r.Context().Value(lib.UserContextKey).(db.User)
@@ -29,15 +28,14 @@ func MeHandler() http.HandlerFunc {
 
 		respJSON, err := json.Marshal(resp)
 		if err != nil {
-			slog.Error("Failed to encode response", "error", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write(respJSON); err != nil {
-			slog.Error("Failed to write response", "error", err)
+			return err
 		}
+		return nil
 	}
 }

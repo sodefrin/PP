@@ -4,43 +4,41 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/sodefrin/PP/server/api/dto"
 	"github.com/sodefrin/PP/server/db"
+	"github.com/sodefrin/PP/server/lib"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SigninHandler(queries *db.Queries) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func SigninHandler(queries *db.Queries) lib.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
+			return nil
 		}
 
 		var req dto.AuthRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
+			return nil
 		}
 
 		user, err := queries.GetUserByName(context.Background(), req.Name)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-				return
+				return nil
 			}
-			slog.Error("GetUserByName error", "error", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-			return
+			return nil
 		}
 
 		// Create session
@@ -55,9 +53,7 @@ func SigninHandler(queries *db.Queries) http.HandlerFunc {
 
 		_, err = queries.CreateSession(context.Background(), sessionParams)
 		if err != nil {
-			slog.Error("CreateSession error", "error", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		http.SetCookie(w, &http.Cookie{
@@ -72,15 +68,14 @@ func SigninHandler(queries *db.Queries) http.HandlerFunc {
 
 		userJSON, err := json.Marshal(user)
 		if err != nil {
-			slog.Error("Failed to encode response", "error", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write(userJSON); err != nil {
-			slog.Error("Failed to write response", "error", err)
+			return err
 		}
+		return nil
 	}
 }

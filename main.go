@@ -75,7 +75,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mux := http.NewServeMux()
+	mux := lib.NewServeMux()
 	mux.Handle("/", http.FileServer(http.FS(publicFS)))
 
 	mux.HandleFunc("/api/health", api.HealthHandler())

@@ -10,33 +10,32 @@ import (
 	"github.com/google/uuid"
 	"github.com/sodefrin/PP/server/api/dto"
 	"github.com/sodefrin/PP/server/db"
+	"github.com/sodefrin/PP/server/lib"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SignupHandler(queries *db.Queries) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func SignupHandler(queries *db.Queries) lib.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
+			return nil
 		}
 
 		var req dto.AuthRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
+			return nil
 		}
 
 		if req.Name == "" || req.Password == "" {
 			http.Error(w, "Name and password are required", http.StatusBadRequest)
-			return
+			return nil
 		}
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
-			slog.Error("Bcrypt error", "error", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		params := db.CreateUserParams{
@@ -46,9 +45,8 @@ func SignupHandler(queries *db.Queries) http.HandlerFunc {
 
 		user, err := queries.CreateUser(context.Background(), params)
 		if err != nil {
-			slog.Error("CreateUser error", "error", err)
 			http.Error(w, "Failed to create user (name might be taken)", http.StatusConflict)
-			return
+			return nil
 		}
 
 		// Create session
@@ -79,15 +77,14 @@ func SignupHandler(queries *db.Queries) http.HandlerFunc {
 
 		userJSON, err := json.Marshal(user)
 		if err != nil {
-			slog.Error("Failed to encode response", "error", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if _, err := w.Write(userJSON); err != nil {
-			slog.Error("Failed to write response", "error", err)
+			return err
 		}
+		return nil
 	}
 }

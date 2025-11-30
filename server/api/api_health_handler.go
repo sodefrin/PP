@@ -2,14 +2,15 @@ package api
 
 import (
 	"net/http"
+
+	"github.com/sodefrin/PP/server/lib"
 )
 
-func HealthHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
+func HealthHandler() lib.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		if _, err := w.Write([]byte("OK")); err != nil {
-			// Can't do much if writing response fails, but good to know
-			// slog.Error("Failed to write health response", "error", err)
+			return err
 		}
+		return nil
 	}
 }
