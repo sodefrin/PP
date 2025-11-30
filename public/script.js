@@ -719,7 +719,51 @@ class Game {
 window.onload = () => {
     const loginBtn = document.getElementById('login-btn');
     loginBtn.addEventListener('click', handleLogin);
+
+    const signupBtn = document.getElementById('signup-btn');
+    signupBtn.addEventListener('click', handleSignup);
+
+    document.getElementById('to-signup').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('signup-container').style.display = 'block';
+    });
+
+    document.getElementById('to-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('signup-container').style.display = 'none';
+        document.getElementById('login-container').style.display = 'block';
+    });
 };
+
+async function performLogin(name, password, errorDiv) {
+    try {
+        const response = await fetch('/api/signin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, password })
+        });
+
+        if (response.ok) {
+            // Login success
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('signup-container').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            new Game();
+            return true;
+        } else {
+            // Login failed
+            if (errorDiv) errorDiv.innerText = 'Login failed: Invalid credentials';
+            return false;
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        if (errorDiv) errorDiv.innerText = 'Login error';
+        return false;
+    }
+}
 
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
@@ -734,8 +778,24 @@ async function handleLogin() {
         return;
     }
 
+    await performLogin(name, password, errorDiv);
+}
+
+async function handleSignup() {
+    const usernameInput = document.getElementById('signup-username');
+    const passwordInput = document.getElementById('signup-password');
+    const errorDiv = document.getElementById('signup-error');
+
+    const name = usernameInput.value;
+    const password = passwordInput.value;
+
+    if (!name || !password) {
+        errorDiv.innerText = 'Please enter username and password';
+        return;
+    }
+
     try {
-        const response = await fetch('/api/signin', {
+        const response = await fetch('/api/signup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -744,16 +804,20 @@ async function handleLogin() {
         });
 
         if (response.ok) {
-            // Login success
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('game-container').style.display = 'flex';
-            new Game();
+            // Signup success, attempt auto-login
+            const success = await performLogin(name, password, errorDiv);
+            if (!success) {
+                alert('Signup successful, but auto-login failed. Please login manually.');
+                document.getElementById('signup-container').style.display = 'none';
+                document.getElementById('login-container').style.display = 'block';
+            }
         } else {
-            // Login failed
-            errorDiv.innerText = 'Login failed: Invalid credentials';
+            // Signup failed
+            const data = await response.json();
+            errorDiv.innerText = 'Signup failed: ' + (data.error || 'Unknown error');
         }
     } catch (error) {
-        console.error('Login error:', error);
-        errorDiv.innerText = 'Login error';
+        console.error('Signup error:', error);
+        errorDiv.innerText = 'Signup error';
     }
 }

@@ -7,7 +7,30 @@ package db
 
 import (
 	"context"
+	"time"
 )
+
+const createSession = `-- name: CreateSession :one
+INSERT INTO sessions (
+  id, user_id, expires_at
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id, user_id, expires_at
+`
+
+type CreateSessionParams struct {
+	ID        string
+	UserID    int64
+	ExpiresAt time.Time
+}
+
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, createSession, arg.ID, arg.UserID, arg.ExpiresAt)
+	var i Session
+	err := row.Scan(&i.ID, &i.UserID, &i.ExpiresAt)
+	return i, err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, password_hash)
@@ -29,6 +52,28 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PasswordHash,
 		&i.CreatedAt,
 	)
+	return i, err
+}
+
+const deleteSession = `-- name: DeleteSession :exec
+DELETE FROM sessions
+WHERE id = ?
+`
+
+func (q *Queries) DeleteSession(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteSession, id)
+	return err
+}
+
+const getSession = `-- name: GetSession :one
+SELECT id, user_id, expires_at FROM sessions
+WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
+	row := q.db.QueryRowContext(ctx, getSession, id)
+	var i Session
+	err := row.Scan(&i.ID, &i.UserID, &i.ExpiresAt)
 	return i, err
 }
 

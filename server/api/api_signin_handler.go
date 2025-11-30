@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/sodefrin/PP/server/api/dto"
+	"github.com/sodefrin/PP/server/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,6 +41,31 @@ func SigninHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
+
+	// Create session
+	sessionID := uuid.New().String()
+	expiresAt := time.Now().Add(24 * time.Hour)
+
+	sessionParams := db.CreateSessionParams{
+		ID:        sessionID,
+		UserID:    user.ID,
+		ExpiresAt: expiresAt,
+	}
+
+	_, err = Queries.CreateSession(context.Background(), sessionParams)
+	if err != nil {
+		slog.Error("CreateSession error", "error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    sessionID,
+		Expires:  expiresAt,
+		HttpOnly: true,
+		Path:     "/",
+	})
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)

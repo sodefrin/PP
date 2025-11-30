@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/sodefrin/PP/server/api/dto"
 	"github.com/sodefrin/PP/server/db"
 
@@ -50,4 +52,28 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(user)
+
+	// Create session
+	sessionID := uuid.New().String()
+	expiresAt := time.Now().Add(24 * time.Hour)
+
+	sessionParams := db.CreateSessionParams{
+		ID:        sessionID,
+		UserID:    user.ID,
+		ExpiresAt: expiresAt,
+	}
+
+	_, err = Queries.CreateSession(context.Background(), sessionParams)
+	if err != nil {
+		slog.Error("CreateSession error", "error", err)
+		// Don't fail the request, just log error. User is created.
+	} else {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    sessionID,
+			Expires:  expiresAt,
+			HttpOnly: true,
+			Path:     "/",
+		})
+	}
 }

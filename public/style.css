@@ -228,3 +228,13 @@ body {
     margin: 5px;
     padding: 5px;
 }
+
+#signup-container {
+    text-align: center;
+    margin-top: 50px;
+}
+
+#signup-container input {
+    margin: 5px;
+    padding: 5px;
+}
