@@ -12,7 +12,7 @@ import (
 
 func TestMeHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		user := &db.User{
+		user := db.User{
 			ID:   1,
 			Name: "testuser",
 		}

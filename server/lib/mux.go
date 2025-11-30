@@ -26,6 +26,7 @@ func (m *ServeMux) HandleFunc(pattern string, handler HandlerFunc) {
 		if err := handler(w, r); err != nil {
 			slog.ErrorContext(r.Context(), "internal server error", "error", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
 		}
 		w.WriteHeader(http.StatusOK)
 	})
