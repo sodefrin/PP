@@ -86,11 +86,11 @@ func main() {
 	mux.HandleFunc("/api/signin", api.SigninHandler(queries))
 	mux.HandleFunc("/api/me", lib.RequireAuthMiddleware(api.MeHandler()))
 
-	// Wrap with Auth Middleware
-	handler := lib.AuthMiddleware(queries)(mux)
-
 	// Wrap with Logging Middleware
-	handler = lib.LoggingMiddleware(handler)
+	handler := lib.LoggingMiddleware(mux)
+
+	// Wrap with Auth Middleware
+	handler = lib.AuthMiddleware(queries)(handler)
 
 	// Wrap with OpenTelemetry
 	handler = otelhttp.NewHandler(handler, "server")
