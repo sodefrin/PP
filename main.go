@@ -1,12 +1,17 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
+
+//go:embed public/*
+var content embed.FS
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -49,6 +54,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Serve static files from embedded filesystem
+	publicFS, err := fs.Sub(content, "public")
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.Handle("/", http.FileServer(http.FS(publicFS)))
+
 	http.HandleFunc("/api/health", healthHandler)
 	http.HandleFunc("/ws", wsHandler)
 
