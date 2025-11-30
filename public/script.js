@@ -716,7 +716,7 @@ class Game {
     }
 }
 
-window.onload = () => {
+window.onload = async () => {
     const loginBtn = document.getElementById('login-btn');
     loginBtn.addEventListener('click', handleLogin);
 
@@ -734,6 +734,19 @@ window.onload = () => {
         document.getElementById('signup-container').style.display = 'none';
         document.getElementById('login-container').style.display = 'block';
     });
+
+    // Check if user is already logged in
+    try {
+        const response = await fetch('/api/me');
+        if (response.ok) {
+            // Logged in
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            new Game();
+        }
+    } catch (error) {
+        console.error('Auto-login check failed:', error);
+    }
 };
 
 async function performLogin(name, password, errorDiv) {
