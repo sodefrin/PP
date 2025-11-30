@@ -1,0 +1,51 @@
+package lib
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/sodefrin/PP/server/db"
+)
+
+func TestRequireAuthMiddleware(t *testing.T) {
+	t.Run("Unauthorized", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		w := httptest.NewRecorder()
+
+		// Dummy handler that should not be called
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			t.Error("next handler should not be called")
+		})
+
+		RequireAuthMiddleware(next)(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("expected status 401, got %d", w.Code)
+		}
+	})
+
+	t.Run("Authorized", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		user := db.User{ID: 1, Name: "test"}
+		ctx := context.WithValue(req.Context(), UserContextKey, user)
+		req = req.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		called := false
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			called = true
+			w.WriteHeader(http.StatusOK)
+		})
+
+		RequireAuthMiddleware(next)(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+		if !called {
+			t.Error("next handler should have been called")
+		}
+	})
+}
