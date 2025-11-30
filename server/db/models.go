@@ -8,11 +8,6 @@ import (
 	"database/sql"
 )
 
-type GameStat struct {
-	ID        int64
-	CreatedAt sql.NullTime
-}
-
 type User struct {
 	ID           int64
 	Name         string

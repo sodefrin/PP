@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"embed"
 	"io/fs"
@@ -41,14 +40,7 @@ func initDB() {
 	queries = db.New(dbConn)
 	api.Queries = queries
 
-	// Test query
-	ctx := context.Background()
-	stat, err := queries.CreateGameStat(ctx)
-	if err != nil {
-		slog.Error("Failed to create game stat", "error", err)
-		os.Exit(1)
-	}
-	slog.Info("Database initialized (in-memory)", "stat_id", stat.ID)
+	slog.Info("Database initialized (in-memory)")
 }
 
 func main() {

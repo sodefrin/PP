@@ -9,19 +9,6 @@ import (
 	"context"
 )
 
-const createGameStat = `-- name: CreateGameStat :one
-INSERT INTO game_stats (created_at)
-VALUES (CURRENT_TIMESTAMP)
-RETURNING id, created_at
-`
-
-func (q *Queries) CreateGameStat(ctx context.Context) (GameStat, error) {
-	row := q.db.QueryRowContext(ctx, createGameStat)
-	var i GameStat
-	err := row.Scan(&i.ID, &i.CreatedAt)
-	return i, err
-}
-
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, password_hash)
 VALUES (?, ?)
@@ -43,34 +30,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 	)
 	return i, err
-}
-
-const getGameStats = `-- name: GetGameStats :many
-SELECT id, created_at FROM game_stats
-ORDER BY created_at DESC
-`
-
-func (q *Queries) GetGameStats(ctx context.Context) ([]GameStat, error) {
-	rows, err := q.db.QueryContext(ctx, getGameStats)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GameStat
-	for rows.Next() {
-		var i GameStat
-		if err := rows.Scan(&i.ID, &i.CreatedAt); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getUserByName = `-- name: GetUserByName :one
