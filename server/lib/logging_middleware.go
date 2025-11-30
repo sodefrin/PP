@@ -44,10 +44,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			slog.String("trace_id", traceID),
 		}
 
-		if rw.statusCode >= 500 {
-			slog.Error("HTTP Request Failed", attrs...)
-		} else {
-			slog.Info("HTTP Request", attrs...)
-		}
+		slog.Info("HTTP Request", attrs...)
 	})
 }
