@@ -4,8 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-
-	"go.opentelemetry.io/otel/trace"
 )
 
 type responseWriter struct {
@@ -31,19 +29,14 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		// Extract trace ID
-		span := trace.SpanFromContext(r.Context())
-		traceID := span.SpanContext().TraceID().String()
-
 		attrs := []any{
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
 			slog.String("remote_addr", r.RemoteAddr),
 			slog.Int("status", rw.statusCode),
 			slog.Duration("duration", duration),
-			slog.String("trace_id", traceID),
 		}
 
-		slog.Info("HTTP Request", attrs...)
+		slog.InfoContext(r.Context(), "HTTP Request", attrs...)
 	})
 }

@@ -28,7 +28,7 @@ func AuthMiddleware(queries *db.Queries) func(http.Handler) http.Handler {
 			session, err := queries.GetSession(r.Context(), sessionID)
 			if err != nil {
 				if err != sql.ErrNoRows {
-					slog.Error("GetSession error", "error", err)
+					slog.ErrorContext(r.Context(), "GetSession error", "error", err)
 				}
 				// Invalid session, continue without user
 				next.ServeHTTP(w, r)
@@ -43,7 +43,7 @@ func AuthMiddleware(queries *db.Queries) func(http.Handler) http.Handler {
 
 			user, err := queries.GetUser(r.Context(), session.UserID)
 			if err != nil {
-				slog.Error("GetUser error", "error", err)
+				slog.ErrorContext(r.Context(), "GetUser error", "error", err)
 				next.ServeHTTP(w, r)
 				return
 			}

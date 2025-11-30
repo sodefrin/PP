@@ -25,18 +25,18 @@ func WsHandler() lib.HandlerFunc {
 		}
 		defer func() {
 			if err := conn.Close(); err != nil {
-				slog.Error("Failed to close websocket connection", "error", err)
+				slog.ErrorContext(r.Context(), "Failed to close websocket connection", "error", err)
 			}
 		}()
 
-		slog.Info("Client connected")
+		slog.InfoContext(r.Context(), "Client connected")
 
 		for {
 			messageType, p, err := conn.ReadMessage()
 			if err != nil {
 				return err
 			}
-			slog.Info("Received message", "payload", string(p))
+			slog.InfoContext(r.Context(), "Received message", "payload", string(p))
 
 			// Echo message back
 			if err := conn.WriteMessage(messageType, p); err != nil {

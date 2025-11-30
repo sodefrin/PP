@@ -35,7 +35,7 @@ func InitTracer() (*sdktrace.TracerProvider, error) {
 		),
 	)
 	if err != nil {
-		slog.Error("Failed to create resource", "error", err)
+		slog.ErrorContext(ctx, "Failed to create resource", "error", err)
 		return nil, err
 	}
 

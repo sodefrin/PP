@@ -29,7 +29,7 @@ var schema string
 var queries *db.Queries
 var dbConn *sql.DB
 
-func initDB() {
+func initDB(ctx context.Context) {
 	var err error
 	// Use otelsql to open database with tracing
 	dbConn, err = otelsql.Open("sqlite", "file::memory:?cache=shared",
@@ -37,41 +37,43 @@ func initDB() {
 		otelsql.WithSQLCommenter(true),
 	)
 	if err != nil {
-		slog.Error("Failed to open database", "error", err)
+		slog.ErrorContext(ctx, "Failed to open database", "error", err)
 		os.Exit(1)
 	}
 
 	// Register DB stats metrics (optional but good practice)
 	if err := otelsql.RegisterDBStatsMetrics(dbConn, otelsql.WithAttributes(semconv.DBSystemSqlite)); err != nil {
-		slog.Error("Failed to register DB stats metrics", "error", err)
+		slog.ErrorContext(ctx, "Failed to register DB stats metrics", "error", err)
 	}
 
 	// Execute schema
 	if _, err := dbConn.Exec(schema); err != nil {
-		slog.Error("Failed to execute schema", "error", err)
+		slog.ErrorContext(ctx, "Failed to execute schema", "error", err)
 		os.Exit(1)
 	}
 
 	queries = db.New(dbConn)
 
-	slog.Info("Database initialized (in-memory)")
+	slog.InfoContext(ctx, "Database initialized (in-memory)")
 }
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	baseHandler := slog.NewJSONHandler(os.Stdout, nil)
+	logger := slog.New(lib.NewTraceHandler(baseHandler))
 	slog.SetDefault(logger)
 
-	initDB()
+	ctx := context.Background()
+	initDB(ctx)
 	defer func() {
 		if err := dbConn.Close(); err != nil {
-			slog.Error("Failed to close database", "error", err)
+			slog.ErrorContext(ctx, "Failed to close database", "error", err)
 		}
 	}()
 
 	// Serve static files from embedded filesystem
 	publicFS, err := fs.Sub(content, "public")
 	if err != nil {
-		slog.Error("Failed to get public FS", "error", err)
+		slog.ErrorContext(ctx, "Failed to get public FS", "error", err)
 		os.Exit(1)
 	}
 
@@ -96,19 +98,19 @@ func main() {
 	// Initialize Tracer
 	tp, err := lib.InitTracer()
 	if err != nil {
-		slog.Error("Failed to initialize tracer", "error", err)
+		slog.ErrorContext(ctx, "Failed to initialize tracer", "error", err)
 		os.Exit(1)
 	}
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
-			slog.Error("Failed to shutdown tracer", "error", err)
+			slog.ErrorContext(ctx, "Failed to shutdown tracer", "error", err)
 		}
 	}()
 
 	port := ":8080"
-	slog.Info("Server starting", "port", port)
+	slog.InfoContext(ctx, "Server starting", "port", port)
 	if err := http.ListenAndServe(port, handler); err != nil {
-		slog.Error("ListenAndServe failed", "error", err)
+		slog.ErrorContext(ctx, "ListenAndServe failed", "error", err)
 		os.Exit(1)
 	}
 }

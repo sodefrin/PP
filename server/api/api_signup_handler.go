@@ -61,7 +61,7 @@ func SignupHandler(queries *db.Queries) lib.HandlerFunc {
 
 		_, err = queries.CreateSession(context.Background(), sessionParams)
 		if err != nil {
-			slog.Error("CreateSession error", "error", err)
+			slog.ErrorContext(r.Context(), "CreateSession error", "error", err)
 			// Don't fail the request, just log error. User is created.
 		} else {
 			http.SetCookie(w, &http.Cookie{

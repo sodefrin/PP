@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"os"
@@ -17,20 +18,20 @@ func TestMain(m *testing.M) {
 	// Setup DB
 	dbConn, err := sql.Open("sqlite", "file::memory:?cache=shared")
 	if err != nil {
-		slog.Error("Failed to open database", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to open database", "error", err)
 		os.Exit(1)
 	}
 
 	// Read schema file
 	schemaBytes, err := os.ReadFile("../db/schema.sql")
 	if err != nil {
-		slog.Error("Failed to read schema file", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to read schema file", "error", err)
 		os.Exit(1)
 	}
 
 	// Execute schema
 	if _, err := dbConn.Exec(string(schemaBytes)); err != nil {
-		slog.Error("Failed to execute schema", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to execute schema", "error", err)
 		os.Exit(1)
 	}
 
@@ -41,7 +42,7 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	if err := dbConn.Close(); err != nil {
-		slog.Error("Failed to close database", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to close database", "error", err)
 	}
 	os.Exit(code)
 }
