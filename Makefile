@@ -9,6 +9,10 @@ build:
 	mkdir -p bin
 	go build -o bin/server main.go
 
+## Run tests
+test:
+	go test ./...
+
 # Generate code (sqlc)
 gen:
 	sqlc generate

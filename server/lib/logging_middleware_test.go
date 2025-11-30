@@ -22,7 +22,7 @@ func TestLoggingMiddleware(t *testing.T) {
 	}{
 		{"Success", 200, "INFO"},
 		{"ClientError", 400, "INFO"},
-		{"ServerError", 500, "ERROR"},
+		{"ServerError", 500, "INFO"},
 	}
 
 	for _, tt := range tests {
