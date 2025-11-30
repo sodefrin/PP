@@ -59,7 +59,7 @@ func initDB(ctx context.Context) {
 
 func main() {
 	baseHandler := slog.NewJSONHandler(os.Stdout, nil)
-	logger := slog.New(lib.NewTraceHandler(baseHandler))
+	logger := slog.New(lib.NewUserHandler(lib.NewTraceHandler(baseHandler)))
 	slog.SetDefault(logger)
 
 	ctx := context.Background()
