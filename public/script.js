@@ -717,5 +717,43 @@ class Game {
 }
 
 window.onload = () => {
-    const game = new Game();
+    const loginBtn = document.getElementById('login-btn');
+    loginBtn.addEventListener('click', handleLogin);
 };
+
+async function handleLogin() {
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorDiv = document.getElementById('login-error');
+
+    const name = usernameInput.value;
+    const password = passwordInput.value;
+
+    if (!name || !password) {
+        errorDiv.innerText = 'Please enter username and password';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/signin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, password })
+        });
+
+        if (response.ok) {
+            // Login success
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            new Game();
+        } else {
+            // Login failed
+            errorDiv.innerText = 'Login failed: Invalid credentials';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.innerText = 'Login error';
+    }
+}

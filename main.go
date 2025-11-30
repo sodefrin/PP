@@ -86,15 +86,17 @@ func main() {
 	// Wrap with OpenTelemetry
 	handler = otelhttp.NewHandler(handler, "server")
 
-	// Init tracer
-	shutdown := lib.InitTracer()
-	if shutdown != nil {
-		defer func() {
-			if err := shutdown(context.Background()); err != nil {
-				slog.Error("Failed to shutdown tracer", "error", err)
-			}
-		}()
+	// Initialize Tracer
+	tp, err := lib.InitTracer()
+	if err != nil {
+		slog.Error("Failed to initialize tracer", "error", err)
+		os.Exit(1)
 	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			slog.Error("Failed to shutdown tracer", "error", err)
+		}
+	}()
 
 	port := ":8080"
 	slog.Info("Server starting", "port", port)

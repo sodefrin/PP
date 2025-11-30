@@ -9,7 +9,15 @@
 </head>
 
 <body>
-    <div id="game-container">
+    <div id="login-container">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="login-btn">Login</button>
+        <div id="login-error" style="color: red;"></div>
+    </div>
+
+    <div id="game-container" style="display: none;">
         <div id="player1-area" class="player-area">
             <h2>Player 1</h2>
             <div class="status-panel">
