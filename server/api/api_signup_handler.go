@@ -75,7 +75,12 @@ func SignupHandler(queries *db.Queries) lib.HandlerFunc {
 			})
 		}
 
-		userJSON, err := json.Marshal(user)
+		resp := dto.User{
+			ID:   user.ID,
+			Name: user.Name,
+		}
+
+		userJSON, err := json.Marshal(resp)
 		if err != nil {
 			return err
 		}

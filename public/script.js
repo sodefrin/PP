@@ -740,6 +740,8 @@ window.onload = async () => {
         const response = await fetch('/api/me');
         if (response.ok) {
             // Logged in
+            const data = await response.json();
+            document.getElementById('p1-name').innerText = data.name;
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
             new Game();
@@ -761,6 +763,8 @@ async function performLogin(name, password, errorDiv) {
 
         if (response.ok) {
             // Login success
+            const data = await response.json();
+            document.getElementById('p1-name').innerText = data.name;
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('signup-container').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
@@ -807,6 +811,10 @@ async function handleSignup() {
         return;
     }
 
+    await performSignup(name, password, errorDiv);
+}
+
+async function performSignup(name, password, errorDiv) {
     try {
         const response = await fetch('/api/signup', {
             method: 'POST',
@@ -817,20 +825,22 @@ async function handleSignup() {
         });
 
         if (response.ok) {
-            // Signup success, attempt auto-login
-            const success = await performLogin(name, password, errorDiv);
-            if (!success) {
-                alert('Signup successful, but auto-login failed. Please login manually.');
-                document.getElementById('signup-container').style.display = 'none';
-                document.getElementById('login-container').style.display = 'block';
-            }
-        } else {
-            // Signup failed
+            // Login success
             const data = await response.json();
-            errorDiv.innerText = 'Signup failed: ' + (data.error || 'Unknown error');
+            document.getElementById('p1-name').innerText = data.name;
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('signup-container').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            new Game();
+            return true;
+        } else {
+            // Login failed
+            if (errorDiv) errorDiv.innerText = 'Login failed: Invalid credentials';
+            return false;
         }
     } catch (error) {
-        console.error('Signup error:', error);
-        errorDiv.innerText = 'Signup error';
+        console.error('Login error:', error);
+        if (errorDiv) errorDiv.innerText = 'Login error';
+        return false;
     }
 }
