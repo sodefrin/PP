@@ -30,8 +30,8 @@ func TestSignup(t *testing.T) {
 		t.Errorf("Failed to decode response: %v", err)
 	}
 
-	if resp["Name"] != "testuser1" {
-		t.Errorf("Expected name testuser1, got %v", resp["Name"])
+	if resp["name"] != "testuser1" {
+		t.Errorf("Expected name testuser1, got %v", resp["name"])
 	}
 
 	// Verify session cookie
