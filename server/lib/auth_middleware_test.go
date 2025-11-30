@@ -15,8 +15,9 @@ func TestRequireAuthMiddleware(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// Dummy handler that should not be called
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next := HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 			t.Error("next handler should not be called")
+			return nil
 		})
 
 		RequireAuthMiddleware(next)(w, req)
@@ -34,9 +35,10 @@ func TestRequireAuthMiddleware(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		called := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next := HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 			called = true
 			w.WriteHeader(http.StatusOK)
+			return nil
 		})
 
 		RequireAuthMiddleware(next)(w, req)
