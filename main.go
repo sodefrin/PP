@@ -1,17 +1,28 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"embed"
 	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
 
+	"puyo-server/server/db"
+
 	"github.com/gorilla/websocket"
+	_ "modernc.org/sqlite"
 )
 
 //go:embed public/*
 var content embed.FS
+
+//go:embed server/db/schema.sql
+var schema string
+
+var queries *db.Queries
+var dbConn *sql.DB
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -20,6 +31,29 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
+}
+
+func initDB() {
+	var err error
+	dbConn, err = sql.Open("sqlite", "file::memory:?cache=shared")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Execute schema
+	if _, err := dbConn.Exec(schema); err != nil {
+		log.Fatal(err)
+	}
+
+	queries = db.New(dbConn)
+
+	// Test query
+	ctx := context.Background()
+	stat, err := queries.CreateGameStat(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Database initialized (in-memory). Created stat ID: %d", stat.ID)
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +88,9 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	initDB()
+	defer dbConn.Close()
+
 	// Serve static files from embedded filesystem
 	publicFS, err := fs.Sub(content, "public")
 	if err != nil {
