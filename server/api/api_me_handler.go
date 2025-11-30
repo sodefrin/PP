@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/sodefrin/PP/server/api/dto"
 	"github.com/sodefrin/PP/server/db"
 	"github.com/sodefrin/PP/server/lib"
 )
@@ -17,11 +18,7 @@ func MeHandler() lib.HandlerFunc {
 
 		user := r.Context().Value(lib.UserContextKey).(db.User)
 
-		// Don't return password hash
-		resp := struct {
-			ID   int64  `json:"id"`
-			Name string `json:"name"`
-		}{
+		resp := dto.User{
 			ID:   user.ID,
 			Name: user.Name,
 		}
