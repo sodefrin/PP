@@ -17,7 +17,7 @@ func TestSignin(t *testing.T) {
 	sBody, _ := json.Marshal(signupBody)
 	sReq := httptest.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(sBody))
 	sW := httptest.NewRecorder()
-	SignupHandler(sW, sReq)
+	SignupHandler(testQueries)(sW, sReq)
 
 	// Test Signin
 	signinBody := map[string]string{
@@ -28,7 +28,7 @@ func TestSignin(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/signin", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
-	SigninHandler(w, req)
+	SigninHandler(testQueries)(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -60,7 +60,7 @@ func TestSigninInvalid(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/signin", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
-	SigninHandler(w, req)
+	SigninHandler(testQueries)(w, req)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("Expected status 401, got %d", w.Code)

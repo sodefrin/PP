@@ -53,7 +53,6 @@ func initDB() {
 	}
 
 	queries = db.New(dbConn)
-	api.Queries = queries
 
 	slog.Info("Database initialized (in-memory)")
 }
@@ -79,14 +78,14 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.FS(publicFS)))
 
-	mux.HandleFunc("/api/health", api.HealthHandler)
-	mux.HandleFunc("/ws", api.WsHandler)
-	mux.HandleFunc("/api/signup", api.SignupHandler)
-	mux.HandleFunc("/api/signin", api.SigninHandler)
-	mux.HandleFunc("/api/me", lib.RequireAuthMiddleware(api.MeHandler))
+	mux.HandleFunc("/api/health", api.HealthHandler())
+	mux.HandleFunc("/ws", api.WsHandler())
+	mux.HandleFunc("/api/signup", api.SignupHandler(queries))
+	mux.HandleFunc("/api/signin", api.SigninHandler(queries))
+	mux.HandleFunc("/api/me", lib.RequireAuthMiddleware(api.MeHandler()))
 
 	// Wrap with Auth Middleware
-	handler := lib.AuthMiddleware(api.Queries)(mux)
+	handler := lib.AuthMiddleware(queries)(mux)
 
 	// Wrap with Logging Middleware
 	handler = lib.LoggingMiddleware(handler)

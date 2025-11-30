@@ -11,6 +11,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+var testQueries *db.Queries
+
 func TestMain(m *testing.M) {
 	// Setup DB
 	dbConn, err := sql.Open("sqlite", "file::memory:?cache=shared")
@@ -33,7 +35,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// Initialize queries
-	Queries = db.New(dbConn)
+	// Initialize queries
+	testQueries = db.New(dbConn)
 
 	code := m.Run()
 
