@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"puyo-server/server/api/dto"
 	"puyo-server/server/db"
 
 	"golang.org/x/crypto/bcrypt"
@@ -17,7 +18,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req AuthRequest
+	var req dto.AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return

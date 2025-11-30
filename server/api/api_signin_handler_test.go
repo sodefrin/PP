@@ -1,0 +1,52 @@
+package api
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestSignin(t *testing.T) {
+	// Create user first
+	signupBody := map[string]string{
+		"name":     "signinuser",
+		"password": "password123",
+	}
+	sBody, _ := json.Marshal(signupBody)
+	sReq := httptest.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(sBody))
+	sW := httptest.NewRecorder()
+	SignupHandler(sW, sReq)
+
+	// Test Signin
+	signinBody := map[string]string{
+		"name":     "signinuser",
+		"password": "password123",
+	}
+	body, _ := json.Marshal(signinBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/signin", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	SigninHandler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+}
+
+func TestSigninInvalid(t *testing.T) {
+	signinBody := map[string]string{
+		"name":     "nonexistent",
+		"password": "password123",
+	}
+	body, _ := json.Marshal(signinBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/signin", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+
+	SigninHandler(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("Expected status 401, got %d", w.Code)
+	}
+}
