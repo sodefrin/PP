@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+type Room struct {
+	ID     int64
+	P1ID   sql.NullInt64
+	P2ID   sql.NullInt64
+	Status string
+}
+
 type Session struct {
 	ID        string
 	UserID    int64

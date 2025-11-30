@@ -11,3 +11,12 @@ CREATE TABLE sessions (
   expires_at DATETIME NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE rooms (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  p1_id INTEGER,
+  p2_id INTEGER,
+  status TEXT NOT NULL,
+  FOREIGN KEY (p1_id) REFERENCES users(id),
+  FOREIGN KEY (p2_id) REFERENCES users(id)
+);
